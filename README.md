@@ -133,13 +133,81 @@ Student Data:
 
 On Windows, lines such as `:: retrieving :: org.apache.spark#spark-submit-parent`, `Exception while deleting Spark temp dir` and `SUCCESS: The process with PID ... has been terminated` may also appear. They are normal and can be ignored.
 
-## Common Windows errors
+## Errors on Windows and how to fix them
 
-| Error | Cause | Fix |
-| --- | --- | --- |
-| `HADOOP_HOME and hadoop.home.dir are unset` or `Hadoop home directory C:\hadoop does not exist` | Spark on Windows needs `winutils.exe` | Download `winutils.exe` and `hadoop.dll` from <https://github.com/cdarlint/winutils> (newest `hadoop-3.3.x/bin` folder), put both in `C:\hadoop\bin`, run `setx HADOOP_HOME "C:\hadoop"`, then restart VS Code |
-| `Cannot run program "python3"` | Spark cannot find Python | Already handled at the top of `delta_demo.py` |
-| `Import "delta" could not be resolved` in VS Code | VS Code is using a Python without the packages | Run step 3, then choose the `.venv` interpreter with **Python: Select Interpreter** |
+These errors came up while running this practical on a Windows laptop. Fix them in this order.
+
+### Error 1: `Import "delta" could not be resolved` (shown in VS Code)
+
+**Cause:** VS Code is using a Python that does not have the packages installed.
+
+1. Open the terminal in VS Code (**Terminal > New Terminal**) inside the project folder.
+2. Create the environment and install the packages:
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+3. Press **Ctrl + Shift + P**, type **Python: Select Interpreter** and choose the one that shows `.venv`.
+4. The warning disappears after a few seconds.
+
+### Error 2: `HADOOP_HOME and hadoop.home.dir are unset`
+
+Also appears as `Hadoop home directory C:\hadoop does not exist`.
+
+**Cause:** Spark on Windows needs two helper files, `winutils.exe` and `hadoop.dll`.
+
+1. Create the folder:
+   ```powershell
+   mkdir C:\hadoop\bin
+   ```
+2. Open <https://github.com/cdarlint/winutils> in a browser.
+3. Click the newest `hadoop-3.3.x` folder, then the `bin` folder.
+4. Click `winutils.exe`, then click the download icon on the right. Choose **Keep** if the browser gives a warning.
+5. Go back and download `hadoop.dll` the same way.
+6. Open File Explorer, go to **Downloads**, select both files and cut them (**Ctrl + X**).
+7. Type `C:\hadoop\bin` in the File Explorer address bar, press Enter and paste (**Ctrl + V**).
+8. Set the environment variables:
+   ```powershell
+   setx HADOOP_HOME "C:\hadoop"
+   setx PATH "$env:PATH;C:\hadoop\bin"
+   ```
+9. Close VS Code completely and open it again.
+10. Check the setup. The first command should print `C:\hadoop` and the second should list both files:
+    ```powershell
+    echo $env:HADOOP_HOME
+    dir C:\hadoop\bin
+    ```
+
+### Error 3: `Cannot run program "python3": CreateProcess error=2`
+
+**Cause:** Spark starts Python worker processes with the name `python3`, which does not exist on Windows.
+
+**Fix:** already included in the code. These lines at the top of `delta_demo.py` tell Spark to use the same Python that runs the script:
+
+```python
+import os
+import sys
+
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+```
+
+If an older copy of the file is being used, add these lines above the Spark code, or set the variables in the terminal before running:
+
+```powershell
+$env:PYSPARK_PYTHON = (Get-Command python).Source
+$env:PYSPARK_DRIVER_PYTHON = (Get-Command python).Source
+python delta_demo.py
+```
+
+### Error 4: `JAVA_HOME is not set` or `Java gateway process exited`
+
+**Cause:** Java is missing, or it is a version Spark does not support.
+
+1. Run `java -version`. PySpark 4.2 needs Java 17 or 21.
+2. If Java is missing or a different version, install JDK 17 (Eclipse Temurin 17 from <https://adoptium.net>) and choose **Set JAVA_HOME variable** in the installer.
+3. Close VS Code completely, open it again and run the program.
 
 ## Conclusion
 
