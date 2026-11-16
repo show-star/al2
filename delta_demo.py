@@ -1,5 +1,13 @@
+import os
+import sys
+
 from pyspark.sql import SparkSession
 from delta import configure_spark_with_delta_pip
+
+# Tell Spark to use the same Python that runs this script
+# (on Windows, Spark looks for "python3" by default, which does not exist)
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 # Start Spark
 builder = (

@@ -106,7 +106,7 @@ The first run takes longer because Spark downloads the Delta Lake JAR files from
 
 ## Code explanation
 
-1. **Imports.** `SparkSession` starts Spark. `configure_spark_with_delta_pip` adds the Delta Lake JAR files that match the installed `delta-spark` package.
+1. **Imports and Python path.** `PYSPARK_PYTHON` is set to `sys.executable`, so Spark uses the same Python that runs the script. Without this, Spark on Windows looks for `python3` and fails with `Cannot run program "python3"`. `SparkSession` starts Spark. `configure_spark_with_delta_pip` adds the Delta Lake JAR files that match the installed `delta-spark` package.
 2. **Delta configuration.** `spark.sql.extensions = io.delta.sql.DeltaSparkSessionExtension` adds Delta commands to Spark SQL. `spark.sql.catalog.spark_catalog = org.apache.spark.sql.delta.catalog.DeltaCatalog` lets Spark's catalog manage Delta tables.
 3. **Spark session.** `local[*]` runs Spark on this computer using all CPU cores. `getOrCreate()` starts the session.
 4. **Sample data.** A Python list of six students, each with `id`, `name` and `marks`.
@@ -132,6 +132,14 @@ Student Data:
 ```
 
 On Windows, lines such as `:: retrieving :: org.apache.spark#spark-submit-parent`, `Exception while deleting Spark temp dir` and `SUCCESS: The process with PID ... has been terminated` may also appear. They are normal and can be ignored.
+
+## Common Windows errors
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `HADOOP_HOME and hadoop.home.dir are unset` or `Hadoop home directory C:\hadoop does not exist` | Spark on Windows needs `winutils.exe` | Download `winutils.exe` and `hadoop.dll` from <https://github.com/cdarlint/winutils> (newest `hadoop-3.3.x/bin` folder), put both in `C:\hadoop\bin`, run `setx HADOOP_HOME "C:\hadoop"`, then restart VS Code |
+| `Cannot run program "python3"` | Spark cannot find Python | Already handled at the top of `delta_demo.py` |
+| `Import "delta" could not be resolved` in VS Code | VS Code is using a Python without the packages | Run step 3, then choose the `.venv` interpreter with **Python: Select Interpreter** |
 
 ## Conclusion
 
