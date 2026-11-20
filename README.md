@@ -1,8 +1,5 @@
 # Big Data Practical 2: Data Lakehouse with Delta Lake
 
-**Name:** Arvind Yadav
-**Roll no:** 31011123065
-
 ## Aim
 
 Data Lakehouse: Create a Delta Lake table and demonstrate "Time Travel" and "ACID Transactions" on Spark.
